@@ -1,4 +1,4 @@
-package com.rideshare.rating.exception;
+package tn.esprit.spring.ratingservice.exception;
 
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;

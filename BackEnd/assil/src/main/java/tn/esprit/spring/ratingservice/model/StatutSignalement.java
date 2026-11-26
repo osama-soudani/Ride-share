@@ -1,4 +1,4 @@
-package com.rideshare.rating.model;
+package tn.esprit.spring.ratingservice.model;
 
 public enum StatutSignalement {
     OUVERT, TRAITE

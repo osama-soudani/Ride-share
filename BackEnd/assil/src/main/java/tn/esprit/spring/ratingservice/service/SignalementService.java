@@ -1,10 +1,10 @@
-package com.rideshare.rating.service;
+package tn.esprit.spring.ratingservice.service;
 
-import com.rideshare.rating.dto.SignalementRequest;
-import com.rideshare.rating.dto.SignalementUpdateRequest;
-import com.rideshare.rating.model.Signalement;
-import com.rideshare.rating.model.StatutSignalement;
-import com.rideshare.rating.repository.SignalementRepository;
+import tn.esprit.spring.ratingservice.dto.SignalementRequest;
+import tn.esprit.spring.ratingservice.dto.SignalementUpdateRequest;
+import tn.esprit.spring.ratingservice.model.Signalement;
+import tn.esprit.spring.ratingservice.model.StatutSignalement;
+import tn.esprit.spring.ratingservice.repository.SignalementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -21,13 +21,13 @@ public class SignalementService {
     private final SignalementRepository repository;
 
     // ---------- CREATE ----------
-    public Signalement creer(String idAuteur, SignalementRequest req) {
-        if (idAuteur.equals(req.idCible())) {
+    public Signalement creer(SignalementRequest req) {
+        if (req.idAuteur().equals(req.idCible())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Vous ne pouvez pas vous signaler vous-même");
         }
         return repository.save(Signalement.builder()
-                .idAuteur(idAuteur)
+                .idAuteur(req.idAuteur())
                 .idCible(req.idCible())
                 .motif(req.motif())
                 .statut(StatutSignalement.OUVERT)
@@ -41,7 +41,7 @@ public class SignalementService {
         return statut == null ? repository.findAll(sort) : repository.findByStatut(statut, sort);
     }
 
-    public List<Signalement> mesSignalements(String idAuteur) {
+    public List<Signalement> parAuteur(String idAuteur) {
         return repository.findByIdAuteurOrderByDateCreationDesc(idAuteur);
     }
 
@@ -50,13 +50,9 @@ public class SignalementService {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Signalement introuvable"));
     }
 
-    // ---------- UPDATE (motif : auteur uniquement, tant que OUVERT) ----------
-    public Signalement modifier(String id, String idUtilisateur, SignalementUpdateRequest req) {
+    // ---------- UPDATE (motif, tant que le signalement est OUVERT) ----------
+    public Signalement modifier(String id, SignalementUpdateRequest req) {
         Signalement s = obtenir(id);
-        if (!s.getIdAuteur().equals(idUtilisateur)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Seul l'auteur peut modifier son signalement");
-        }
         if (s.getStatut() == StatutSignalement.TRAITE) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Un signalement déjà traité ne peut plus être modifié");
@@ -65,7 +61,7 @@ public class SignalementService {
         return repository.save(s);
     }
 
-    /** Signalement.traiter() : OUVERT -> TRAITE (ADMIN) */
+    /** Signalement.traiter() : OUVERT -> TRAITE  */
     public Signalement traiter(String id) {
         Signalement s = obtenir(id);
         if (s.getStatut() == StatutSignalement.TRAITE) {
@@ -75,7 +71,7 @@ public class SignalementService {
         return repository.save(s);
     }
 
-    // ---------- DELETE (ADMIN) ----------
+    // ---------- DELETE  ----------
     public void supprimer(String id) {
         repository.delete(obtenir(id));
     }

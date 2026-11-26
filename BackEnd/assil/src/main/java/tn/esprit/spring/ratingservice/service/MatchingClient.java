@@ -1,4 +1,4 @@
-package com.rideshare.rating.service;
+package tn.esprit.spring.ratingservice.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -12,8 +12,9 @@ import java.util.List;
 
 /**
  * Vérification optionnelle auprès du matching-service (GroupeTrajet).
+ * Activée avec rating.verify-course=true.
  * Hypothèse : GET /api/groupes/{id} -> { statut, idChauffeur, idsPassagers: [] }
- * À adapter à l'API réelle de votre matching-service.
+ * À adapter à l'API réelle du matching-service.
  */
 @Component
 public class MatchingClient {
@@ -29,14 +30,13 @@ public class MatchingClient {
         this.enabled = enabled;
     }
 
-    public void verifierParticipation(String idCourseRef, String idAuteur, String idCible, String bearerToken) {
+    public void verifierParticipation(String idCourseRef, String idAuteur, String idCible) {
         if (!enabled) return;
 
         GroupeDto groupe;
         try {
             groupe = restClient.get()
                     .uri("/api/groupes/{id}", idCourseRef)
-                    .header("Authorization", "Bearer " + bearerToken)
                     .retrieve()
                     .body(GroupeDto.class);
         } catch (HttpClientErrorException.NotFound e) {

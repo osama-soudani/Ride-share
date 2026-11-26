@@ -1,7 +1,7 @@
-package com.rideshare.rating.repository;
+package tn.esprit.spring.ratingservice.repository;
 
-import com.rideshare.rating.model.Signalement;
-import com.rideshare.rating.model.StatutSignalement;
+import tn.esprit.spring.ratingservice.model.Signalement;
+import tn.esprit.spring.ratingservice.model.StatutSignalement;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 

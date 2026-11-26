@@ -1,10 +1,10 @@
-package com.rideshare.rating.service;
+package tn.esprit.spring.ratingservice.service;
 
-import com.rideshare.rating.dto.EvaluationRequest;
-import com.rideshare.rating.dto.EvaluationUpdateRequest;
-import com.rideshare.rating.dto.MoyenneResponse;
-import com.rideshare.rating.model.Evaluation;
-import com.rideshare.rating.repository.EvaluationRepository;
+import tn.esprit.spring.ratingservice.dto.EvaluationRequest;
+import tn.esprit.spring.ratingservice.dto.EvaluationUpdateRequest;
+import tn.esprit.spring.ratingservice.dto.MoyenneResponse;
+import tn.esprit.spring.ratingservice.model.Evaluation;
+import tn.esprit.spring.ratingservice.repository.EvaluationRepository;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -29,24 +29,22 @@ public class EvaluationService {
     private final MatchingClient matchingClient;
 
     // ---------- CREATE ----------
-    public Evaluation creer(String idAuteur, EvaluationRequest req, String bearerToken) {
-        if (idAuteur.equals(req.idCible())) {
+    public Evaluation creer(EvaluationRequest req) {
+        if (req.idAuteur().equals(req.idCible())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Vous ne pouvez pas vous évaluer vous-même");
         }
+        matchingClient.verifierParticipation(req.idCourseRef(), req.idAuteur(), req.idCible());
 
-        matchingClient.verifierParticipation(req.idCourseRef(), idAuteur, req.idCible(), bearerToken);
-
-        Evaluation evaluation = Evaluation.builder()
-                .idAuteur(idAuteur)
+        // DuplicateKeyException (index unique) -> 409 via GlobalExceptionHandler
+        return repository.save(Evaluation.builder()
+                .idAuteur(req.idAuteur())
                 .idCible(req.idCible())
                 .idCourseRef(req.idCourseRef())
                 .note(req.note())
                 .commentaire(req.commentaire())
                 .date(Instant.now())
-                .build();
-        // DuplicateKeyException (index unique) -> 409 via GlobalExceptionHandler
-        return repository.save(evaluation);
+                .build());
     }
 
     // ---------- READ ----------
@@ -84,26 +82,17 @@ public class EvaluationService {
         return new MoyenneResponse(idCible, Math.round(moyenne * 100) / 100.0, nombre);
     }
 
-    // ---------- UPDATE (auteur uniquement ; la cible et la course ne changent pas) ----------
-    public Evaluation modifier(String id, String idUtilisateur, EvaluationUpdateRequest req) {
+    // ---------- UPDATE (la cible et la course ne changent pas) ----------
+    public Evaluation modifier(String id, EvaluationUpdateRequest req) {
         Evaluation e = obtenir(id);
-        if (!e.getIdAuteur().equals(idUtilisateur)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Seul l'auteur peut modifier son évaluation");
-        }
         e.setNote(req.note());
         e.setCommentaire(req.commentaire());
         return repository.save(e);
     }
 
-    // ---------- DELETE (auteur ou ADMIN) ----------
-    public void supprimer(String id, String idUtilisateur, boolean admin) {
-        Evaluation e = obtenir(id);
-        if (!admin && !e.getIdAuteur().equals(idUtilisateur)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Seul l'auteur ou un administrateur peut supprimer cette évaluation");
-        }
-        repository.delete(e);
+    // ---------- DELETE ----------
+    public void supprimer(String id) {
+        repository.delete(obtenir(id));
     }
 
     private void verifierObjectId(String id) {

@@ -1,4 +1,4 @@
-package com.rideshare.rating.dto;
+package tn.esprit.spring.ratingservice.dto;
 
 import jakarta.validation.constraints.*;
 

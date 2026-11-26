@@ -1,6 +1,6 @@
-package com.rideshare.rating.repository;
+package tn.esprit.spring.ratingservice.repository;
 
-import com.rideshare.rating.model.Evaluation;
+import tn.esprit.spring.ratingservice.model.Evaluation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
